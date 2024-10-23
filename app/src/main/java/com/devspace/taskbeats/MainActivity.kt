@@ -19,8 +19,12 @@ class MainActivity : AppCompatActivity() {
         ).build()
     }
 
-    private val categoryDao by lazy {
+    private val categoryDao: CategoryDao by lazy {
         db.getCategoryDao()
+    }
+
+    private val taskDao: TaskDao by lazy {
+        db.getTaskDao()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -28,6 +32,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         insertDefaultCategory()
+        insertDefaultTask()
 
         val rvCategory = findViewById<RecyclerView>(R.id.rv_categories)
         val rvTask = findViewById<RecyclerView>(R.id.rv_tasks)
@@ -56,14 +61,16 @@ class MainActivity : AppCompatActivity() {
         }
 
         rvCategory.adapter = categoryAdapter
+        getCategoriesFromDataBase(categoryAdapter)
         categoryAdapter.submitList(categories)
 
         rvTask.adapter = taskAdapter
+        getTaskFromDataBase(taskAdapter)
         taskAdapter.submitList(tasks)
     }
 
-    private fun insertDefaultCategory(){
-        val categoriesEntity = categories.map{
+    private fun insertDefaultCategory() {
+        val categoriesEntity = categories.map {
             CategoryEntity(
                 name = it.name,
                 isSelected = it.isSelected
@@ -71,6 +78,44 @@ class MainActivity : AppCompatActivity() {
         }
         GlobalScope.launch(Dispatchers.IO) {
             categoryDao.insertAll(categoriesEntity)
+        }
+    }
+
+    private fun getCategoriesFromDataBase(adapter: CategoryListAdapter) {
+        GlobalScope.launch(Dispatchers.IO) {
+            val categoriesFromDb: List<CategoryEntity> = categoryDao.getAll()
+            val categoriesUiData = categoriesFromDb.map {
+                CategoryUiData(
+                    name = it.name,
+                    isSelected = it.isSelected
+                )
+            }
+            adapter.submitList(categoriesUiData)
+        }
+    }
+
+    private fun insertDefaultTask() {
+        val taskEntity = tasks.map {
+            TaskEntity(
+                name = it.name,
+                category = it.category
+            )
+        }
+        GlobalScope.launch(Dispatchers.IO) {
+            taskDao.insertAll(taskEntity)
+        }
+    }
+
+    private fun getTaskFromDataBase(adapter: TaskListAdapter) {
+        GlobalScope.launch(Dispatchers.IO) {
+            val taskFromDb: List<TaskEntity> = taskDao.getAll()
+            val taskUiData = taskFromDb.map {
+                TaskUiData(
+                    name = it.name,
+                    category = it.category
+                )
+            }
+            adapter.submitList(taskUiData)
         }
     }
 }
