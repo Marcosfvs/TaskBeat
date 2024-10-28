@@ -188,7 +188,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateTask (taskEntity: TaskEntity){
         GlobalScope.launch(Dispatchers.IO){
-            taskDao.update((taskEntity))
+            taskDao.update(taskEntity)
+            getTaskFromDataBase()
+        }
+    }
+
+    private fun deleteTask (taskEntity: TaskEntity){
+        GlobalScope.launch(Dispatchers.IO){
+            taskDao.delete(taskEntity)
             getTaskFromDataBase()
         }
     }
@@ -212,8 +219,16 @@ class MainActivity : AppCompatActivity() {
                     category = taskToBeUpdated.category
                 )
                 updateTask(taskEntityToBeUpdate)
-            }
+            },
+            onDeleteClicked = { taskToBeDeleted ->
+                val taskEntityToBeDelete = TaskEntity(
+                    id = taskToBeDeleted.id,
+                    name = taskToBeDeleted.name,
+                    category = taskToBeDeleted.category
+                )
+                deleteTask(taskEntityToBeDelete)
 
+            }
         )
         createTaskBottomSheet.show(
             supportFragmentManager,
